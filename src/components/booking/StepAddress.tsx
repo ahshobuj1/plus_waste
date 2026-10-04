@@ -114,9 +114,9 @@ export default function StepAddress({
           </div>
         )}
       </div>
-      <div className="q-nav">
+      <div className="q-next mt-5 pt-2 flex items-center gap-3">
         <button
-          className="btn-go"
+          className="btn btn-go"
           type="button"
           disabled={query.trim().length <= 3}
           onClick={onAdvance}

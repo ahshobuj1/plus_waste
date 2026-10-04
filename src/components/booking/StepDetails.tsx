@@ -176,7 +176,7 @@ export default function StepDetails({
         />
       </div>
 
-      <div className="q-next">
+      <div className="q-next mt-5 pt-2 flex items-center gap-3">
         <button
           className="btn btn-go"
           type="button"

@@ -290,7 +290,7 @@ export default function BookingWidget({
 
   return (
     <>
-      <section id="flow" className="sec tinted" style={{ scrollMarginTop: '70px', paddingTop: '16px' }}>
+      <section id="flow" className="sec" style={{ scrollMarginTop: '70px', paddingTop: '16px' }}>
         <div className="wrap">
           <div className="sec-hd" style={{ marginBottom: '14px' }}>
             <h2 style={{ fontSize: 'clamp(22px, 2.8vw, 32px)', marginBottom: '4px' }}>Build your collection</h2>

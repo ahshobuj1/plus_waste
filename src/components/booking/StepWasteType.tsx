@@ -76,9 +76,9 @@ export default function StepWasteType({
           );
         })}
       </div>
-      <div className="q-nav">
+      <div className="q-next mt-5 pt-2 flex items-center gap-3">
         <button
-          className="btn-go"
+          className="btn btn-go"
           type="button"
           disabled={selectedTypes.length === 0}
           onClick={onAdvance}

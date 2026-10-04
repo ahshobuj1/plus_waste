@@ -13,7 +13,7 @@ export default function Hero({ onPostcodeAccepted }: HeroProps) {
     <section className="hero">
       <div className="hero-in">
         <div>
-          <h1 className="a-up d1 font-extrabold text-[38px] sm:text-[48px] md:text-[56px] lg:text-[62px] leading-[1.04] tracking-[-0.035em] text-[#141416] max-w-[14ch]">
+          <h1 className="a-up d1 font-extrabold text-[44px] sm:text-[54px] md:text-[66px] lg:text-[76px] leading-[1.02] tracking-[-0.035em] text-[#141416] max-w-[15ch]">
             Rubbish gone today.<br />
             Priced before you <span className="text-[#d32d1f]">book</span>.
           </h1>

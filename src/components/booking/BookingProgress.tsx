@@ -69,11 +69,34 @@ export default function BookingProgress({
               key={s.num}
               className={`pstep ${containerClass}`}
               data-state={state}
+              style={{
+                backgroundColor: isActive ? '#d32d1f' : isDone ? '#f2faf6' : '#ffffff',
+                borderColor: isActive ? '#d32d1f' : isDone ? '#c9e4d6' : '#e6e3de',
+                color: isActive ? '#ffffff' : isDone ? '#141416' : '#4a4744'
+              }}
             >
-              <span className={`n ${numClass}`}>
+              <span
+                className={`n ${numClass}`}
+                style={{
+                  color: isActive || isDone ? '#ffffff' : '#6a6864',
+                  backgroundColor: isActive
+                    ? 'rgba(255, 255, 255, 0.3)'
+                    : isDone
+                    ? '#127a4a'
+                    : '#f4f2ef'
+                }}
+              >
                 {isDone && !isActive ? '✓' : s.num}
               </span>
-              <span className="tx truncate">{s.label}</span>
+              <span
+                className="tx truncate font-bold"
+                style={{
+                  color: isActive ? '#ffffff' : isDone ? '#141416' : '#4a4744',
+                  display: 'inline-block'
+                }}
+              >
+                {s.label}
+              </span>
             </div>
           );
         })}

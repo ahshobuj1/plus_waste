@@ -83,9 +83,49 @@ export default function OurWorkSlider() {
         ›
       </button>
 
-      <div className="sl-meta">
-        <span className="sl-area" id="slArea">{currentPhoto.area}</span>
-        <span className="sl-cap" id="slCap">{currentPhoto.cap}</span>
+      <div
+        className="sl-meta pointer-events-none"
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 10,
+          padding: '28px clamp(16px, 3vw, 32px)',
+          background: 'linear-gradient(to top, rgba(16, 16, 18, 0.94) 0%, rgba(16, 16, 18, 0.6) 55%, transparent 100%)'
+        }}
+      >
+        <span
+          className="sl-area"
+          id="slArea"
+          style={{
+            display: 'inline-block',
+            backgroundColor: '#d32d1f',
+            color: '#ffffff',
+            fontWeight: 800,
+            fontSize: 'clamp(13px, 1.7vw, 16px)',
+            padding: '6px 14px',
+            borderRadius: '8px',
+            marginBottom: '8px',
+            boxShadow: '0 4px 14px rgba(211, 45, 31, 0.45)'
+          }}
+        >
+          {currentPhoto.area}
+        </span>
+        <span
+          className="sl-cap"
+          id="slCap"
+          style={{
+            display: 'block',
+            color: '#ffffff',
+            fontSize: 'clamp(15px, 1.9vw, 20px)',
+            fontWeight: 700,
+            textShadow: '0 2px 10px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 0.9)',
+            letterSpacing: '-0.01em'
+          }}
+        >
+          {currentPhoto.cap}
+        </span>
       </div>
 
       <div className="sl-dots" id="slDots">
