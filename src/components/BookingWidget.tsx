@@ -1,13 +1,23 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useCallback, useRef, useSyncExternalStore } from 'react';
+import React, {
+  useState,
+  useMemo,
+  useEffect,
+  useCallback,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
+import {BookingState} from '@/types';
+import {calculateQuote} from '@/utils/pricing';
 import {
-  BookingState
-} from '@/types';
-import { calculateQuote } from '@/utils/pricing';
-import { subscribeToBasket, getBasketSnapshot, getServerBasketSnapshot } from '@/utils/shop';
+  subscribeToBasket,
+  getBasketSnapshot,
+  getServerBasketSnapshot,
+} from '@/utils/shop';
 import BookingProgress from './booking/BookingProgress';
 import BookingRail from './booking/BookingRail';
+import MobilePriceBar from './booking/MobilePriceBar';
 import StepAddress from './booking/StepAddress';
 import StepWasteType from './booking/StepWasteType';
 import StepLocation from './booking/StepLocation';
@@ -20,20 +30,49 @@ import StepDetails from './booking/StepDetails';
 import StepPayment from './booking/StepPayment';
 
 const ALL_QUESTIONS = [
-  'address', 'types', 'place', 'floor', 'access', 'spot', 'photos',
-  'load', 'addons', 'labour', 'dis', 'date', 'slot', 'park', 'details', 'acct', 'pay'
+  'address',
+  'types',
+  'place',
+  'floor',
+  'access',
+  'spot',
+  'photos',
+  'load',
+  'addons',
+  'labour',
+  'dis',
+  'date',
+  'slot',
+  'park',
+  'details',
+  'acct',
+  'pay',
 ] as const;
 
-type QuestionId = typeof ALL_QUESTIONS[number];
+type QuestionId = (typeof ALL_QUESTIONS)[number];
 
 const STEP_OF: Record<QuestionId, number> = {
   address: 1,
-  types: 2, place: 2, floor: 2, access: 2, spot: 2, photos: 2,
-  load: 3, addons: 3, labour: 3, dis: 3,
-  date: 4, slot: 4, park: 4, details: 4, acct: 4, pay: 4
+  types: 2,
+  place: 2,
+  floor: 2,
+  access: 2,
+  spot: 2,
+  photos: 2,
+  load: 3,
+  addons: 3,
+  labour: 3,
+  dis: 3,
+  date: 4,
+  slot: 4,
+  park: 4,
+  details: 4,
+  acct: 4,
+  pay: 4,
 };
 
-const BOOKING_ENDPOINT = 'https://hook.eu2.make.com/46g39gftbdjtvxafxibnqqf3twiwgxib';
+const BOOKING_ENDPOINT =
+  'https://hook.eu2.make.com/46g39gftbdjtvxafxibnqqf3twiwgxib';
 
 interface BookingWidgetProps {
   initialPostcode?: string;
@@ -48,12 +87,12 @@ export default function BookingWidget({
   onOpenSocialModal,
   onOpenWhatsAppModal,
   onOpenShopModal,
-  onShowToast
+  onShowToast,
 }: BookingWidgetProps) {
   const basketJson = useSyncExternalStore(
     subscribeToBasket,
     getBasketSnapshot,
-    getServerBasketSnapshot
+    getServerBasketSnapshot,
   );
   const shopBasket = useMemo<Record<string, number>>(() => {
     try {
@@ -90,16 +129,16 @@ export default function BookingWidget({
     ctype: '',
     acct: '',
     signedIn: '',
-    pay: ''
+    pay: '',
   });
 
   const [prevPostcode, setPrevPostcode] = useState(initialPostcode);
   if (initialPostcode && initialPostcode !== prevPostcode) {
     setPrevPostcode(initialPostcode);
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       postcode: initialPostcode,
-      address: prev.address || initialPostcode
+      address: prev.address || initialPostcode,
     }));
   }
 
@@ -108,7 +147,7 @@ export default function BookingWidget({
 
   // Dynamic visible questions
   const liveQuestions = useMemo(() => {
-    return ALL_QUESTIONS.filter(id => {
+    return ALL_QUESTIONS.filter((id) => {
       if (id === 'floor' || id === 'access') return state.place === 'inside';
       if (id === 'spot') return state.place === 'outside';
       return true;
@@ -117,8 +156,12 @@ export default function BookingWidget({
 
   // Validation map
   const doneMap = useMemo(() => {
-    const isPhoneValid = /^(\+?44|0)7\d{9}$/.test(state.phone.replace(/[\s-]/g, ''));
-    const isEmailValid = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(state.email.trim());
+    const isPhoneValid = /^(\+?44|0)7\d{9}$/.test(
+      state.phone.replace(/[\s-]/g, ''),
+    );
+    const isEmailValid = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(
+      state.email.trim(),
+    );
 
     return {
       address: state.address.trim().length > 3,
@@ -127,7 +170,9 @@ export default function BookingWidget({
       floor: !!state.floor,
       access: !!state.access,
       spot: !!state.spot,
-      photos: state.noPhotos || state.files.filter(f => f.type === 'image').length >= 3,
+      photos:
+        state.noPhotos ||
+        state.files.filter((f) => f.type === 'image').length >= 3,
       load: !!state.load,
       addons: !!state.addonsSeen,
       labour: !!state.labour,
@@ -135,16 +180,20 @@ export default function BookingWidget({
       date: !!state.date,
       slot: !!state.slot,
       park: !!state.park,
-      details: state.name.trim().length > 1 && isPhoneValid && isEmailValid && !!state.ctype,
+      details:
+        state.name.trim().length > 1 &&
+        isPhoneValid &&
+        isEmailValid &&
+        !!state.ctype,
       acct: !!state.acct,
-      pay: !!state.pay
+      pay: !!state.pay,
     } as Record<QuestionId, boolean>;
   }, [state]);
 
   // Progress metrics
   const progressPercent = useMemo(() => {
     const total = liveQuestions.length;
-    const doneCount = liveQuestions.filter(id => doneMap[id]).length;
+    const doneCount = liveQuestions.filter((id) => doneMap[id]).length;
     return total > 0 ? Math.round((doneCount / total) * 100) : 0;
   }, [liveQuestions, doneMap]);
 
@@ -152,9 +201,9 @@ export default function BookingWidget({
 
   const completedSteps = useMemo(() => {
     const steps = [1, 2, 3, 4];
-    return steps.filter(s => {
-      const qInStep = liveQuestions.filter(id => STEP_OF[id] === s);
-      return qInStep.length > 0 && qInStep.every(id => doneMap[id]);
+    return steps.filter((s) => {
+      const qInStep = liveQuestions.filter((id) => STEP_OF[id] === s);
+      return qInStep.length > 0 && qInStep.every((id) => doneMap[id]);
     });
   }, [liveQuestions, doneMap]);
 
@@ -173,19 +222,22 @@ export default function BookingWidget({
   }, [state, shopBasket]);
 
   // Auto-advance helper
-  const advanceFrom = useCallback((fromId: QuestionId) => {
-    const vs = liveQuestions;
-    const currentIndex = vs.indexOf(fromId);
-    for (let k = currentIndex + 1; k < vs.length; k++) {
-      const nextId = vs[k];
-      if (!doneMap[nextId]) {
-        setOpenId(nextId);
-        return;
+  const advanceFrom = useCallback(
+    (fromId: QuestionId) => {
+      const vs = liveQuestions;
+      const currentIndex = vs.indexOf(fromId);
+      for (let k = currentIndex + 1; k < vs.length; k++) {
+        const nextId = vs[k];
+        if (!doneMap[nextId]) {
+          setOpenId(nextId);
+          return;
+        }
       }
-    }
-    // If all answered, open the last
-    setOpenId(vs[vs.length - 1]);
-  }, [liveQuestions, doneMap]);
+      // If all answered, open the last
+      setOpenId(vs[vs.length - 1]);
+    },
+    [liveQuestions, doneMap],
+  );
 
   // Trigger modals on reaching certain questions
   const hasShownShopPrompt = useRef(false);
@@ -214,6 +266,14 @@ export default function BookingWidget({
     }
   }, [openId, onOpenShopModal, onOpenWhatsAppModal]);
 
+  // Sync body class for mobile sticky price bar
+  useEffect(() => {
+    document.body.classList.toggle('has-mobbar', !!quote.priced);
+    return () => {
+      document.body.classList.remove('has-mobbar');
+    };
+  }, [quote.priced]);
+
   // Submission handler
   const handleSubmit = (saveOnly: boolean) => {
     // Validate all required questions
@@ -240,31 +300,36 @@ export default function BookingWidget({
       date: state.date ? state.date.toISOString().slice(0, 10) : '',
       slot: state.slot ? state.slot.label : '',
       wasteTypes: state.types.join(', '),
-      place: state.place === 'inside'
-        ? `Inside — ${state.floor}, ${state.access}`
-        : `Outside — ${state.spot}`,
+      place:
+        state.place === 'inside'
+          ? `Inside — ${state.floor}, ${state.access}`
+          : `Outside — ${state.spot}`,
       labour: state.labour,
-      vanSize: state.load ? `${state.load.name} (${state.load.cuyd} cu yd)` : '',
-      addons: Object.entries(state.items)
-        .filter(([, q]) => q > 0)
-        .map(([id, q]) => `${q} x ${id}`)
-        .join(', ') || 'None',
+      vanSize: state.load
+        ? `${state.load.name} (${state.load.cuyd} cu yd)`
+        : '',
+      addons:
+        Object.entries(state.items)
+          .filter(([, q]) => q > 0)
+          .map(([id, q]) => `${q} x ${id}`)
+          .join(', ') || 'None',
       dismantle: state.dis || 'Nothing',
       parking: state.park,
       photoCount: state.noPhotos
         ? 'No photos supplied'
-        : String(state.files.filter(f => f.type === 'image').length),
+        : String(state.files.filter((f) => f.type === 'image').length),
       total: quote.total.toFixed(2),
       notes: state.notes.trim(),
       accountType: state.acct,
       shopTotal: quote.shop.toFixed(2),
-      priority: quote.shop > 0 ? 'SHOP ORDER — despatch required' : 'Collection only'
+      priority:
+        quote.shop > 0 ? 'SHOP ORDER — despatch required' : 'Collection only',
     };
 
     fetch(BOOKING_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload),
     }).catch(() => {});
 
     const title = saveOnly ? 'Quote saved' : 'Booking received';
@@ -284,11 +349,23 @@ export default function BookingWidget({
 
   return (
     <>
-      <section id="flow" className="sec" style={{ scrollMarginTop: '70px', paddingTop: '16px' }}>
+      <section
+        id="flow"
+        className="sec"
+        style={{scrollMarginTop: '70px', paddingTop: '16px'}}>
         <div className="wrap">
-          <div className="sec-hd" style={{ marginBottom: '14px' }}>
-            <h2 style={{ fontSize: 'clamp(22px, 2.8vw, 32px)', marginBottom: '4px' }}>Build your collection</h2>
-            <p style={{ marginTop: '4px', fontSize: '14.5px' }}>Answer one question at a time. The page moves you along, and the price updates as you go.</p>
+          <div className="sec-hd" style={{marginBottom: '14px'}}>
+            <h2
+              style={{
+                fontSize: 'clamp(22px, 2.8vw, 32px)',
+                marginBottom: '4px',
+              }}>
+              Build your collection
+            </h2>
+            <p style={{marginTop: '4px', fontSize: '14.5px'}}>
+              Answer one question at a time. The page moves you along, and the
+              price updates as you go.
+            </p>
           </div>
 
           <div className="flow-wrap">
@@ -307,8 +384,12 @@ export default function BookingWidget({
                 isBad={badId === 'address'}
                 address={state.address}
                 postcode={state.postcode}
-                onAddressChange={addr => setState(prev => ({ ...prev, address: addr }))}
-                onPostcodeChange={pc => setState(prev => ({ ...prev, postcode: pc }))}
+                onAddressChange={(addr) =>
+                  setState((prev) => ({...prev, address: addr}))
+                }
+                onPostcodeChange={(pc) =>
+                  setState((prev) => ({...prev, postcode: pc}))
+                }
                 onAdvance={() => advanceFrom('address')}
                 onEdit={() => setOpenId('address')}
               />
@@ -320,7 +401,7 @@ export default function BookingWidget({
                 isDone={doneMap.types}
                 isBad={badId === 'types'}
                 selectedTypes={state.types}
-                onChange={types => setState(prev => ({ ...prev, types }))}
+                onChange={(types) => setState((prev) => ({...prev, types}))}
                 onAdvance={() => advanceFrom('types')}
                 onEdit={() => setOpenId('types')}
               />
@@ -334,29 +415,29 @@ export default function BookingWidget({
                 doneMap={doneMap}
                 badId={badId}
                 stepNumMap={stepNumMap}
-                onPlaceChange={val => {
-                  setState(prev => ({
+                onPlaceChange={(val) => {
+                  setState((prev) => ({
                     ...prev,
                     place: val,
                     floor: '',
                     access: '',
-                    spot: ''
+                    spot: '',
                   }));
                   setOpenId(val === 'inside' ? 'floor' : 'spot');
                 }}
-                onFloorChange={val => {
-                  setState(prev => ({ ...prev, floor: val }));
+                onFloorChange={(val) => {
+                  setState((prev) => ({...prev, floor: val}));
                   setOpenId('access');
                 }}
-                onAccessChange={val => {
-                  setState(prev => ({ ...prev, access: val }));
+                onAccessChange={(val) => {
+                  setState((prev) => ({...prev, access: val}));
                   setOpenId('photos');
                 }}
-                onSpotChange={val => {
-                  setState(prev => ({ ...prev, spot: val }));
+                onSpotChange={(val) => {
+                  setState((prev) => ({...prev, spot: val}));
                   setOpenId('photos');
                 }}
-                onOpenQ={id => setOpenId(id as QuestionId)}
+                onOpenQ={(id) => setOpenId(id as QuestionId)}
               />
 
               <StepPhotos
@@ -366,8 +447,12 @@ export default function BookingWidget({
                 isBad={badId === 'photos'}
                 files={state.files}
                 noPhotos={state.noPhotos}
-                onFilesChange={files => setState(prev => ({ ...prev, files }))}
-                onNoPhotosChange={noPhotos => setState(prev => ({ ...prev, noPhotos }))}
+                onFilesChange={(files) =>
+                  setState((prev) => ({...prev, files}))
+                }
+                onNoPhotosChange={(noPhotos) =>
+                  setState((prev) => ({...prev, noPhotos}))
+                }
                 onAdvance={() => advanceFrom('photos')}
                 onEdit={() => setOpenId('photos')}
               />
@@ -379,8 +464,8 @@ export default function BookingWidget({
                 isDone={doneMap.load}
                 isBad={badId === 'load'}
                 selectedLoad={state.load}
-                onSelectLoad={load => {
-                  setState(prev => ({ ...prev, load }));
+                onSelectLoad={(load) => {
+                  setState((prev) => ({...prev, load}));
                   advanceFrom('load');
                 }}
                 onEdit={() => setOpenId('load')}
@@ -393,14 +478,14 @@ export default function BookingWidget({
                 isBad={badId === 'addons'}
                 items={state.items}
                 onItemChange={(id, qty) => {
-                  setState(prev => ({
+                  setState((prev) => ({
                     ...prev,
-                    items: { ...prev.items, [id]: qty },
-                    addonsSeen: true
+                    items: {...prev.items, [id]: qty},
+                    addonsSeen: true,
                   }));
                 }}
                 onAdvance={() => {
-                  setState(prev => ({ ...prev, addonsSeen: true }));
+                  setState((prev) => ({...prev, addonsSeen: true}));
                   advanceFrom('addons');
                 }}
                 onEdit={() => setOpenId('addons')}
@@ -413,15 +498,15 @@ export default function BookingWidget({
                 doneMap={doneMap}
                 badId={badId}
                 stepNumMap={stepNumMap}
-                onLabourChange={val => {
-                  setState(prev => ({ ...prev, labour: val }));
+                onLabourChange={(val) => {
+                  setState((prev) => ({...prev, labour: val}));
                   advanceFrom('labour');
                 }}
                 onDisChange={(label, count) => {
-                  setState(prev => ({ ...prev, dis: label, disN: count }));
+                  setState((prev) => ({...prev, dis: label, disN: count}));
                   advanceFrom('dis');
                 }}
-                onOpenQ={id => setOpenId(id as QuestionId)}
+                onOpenQ={(id) => setOpenId(id as QuestionId)}
               />
 
               {/* Step 4: When & pay */}
@@ -433,19 +518,19 @@ export default function BookingWidget({
                 doneMap={doneMap}
                 badId={badId}
                 stepNumMap={stepNumMap}
-                onDateChange={date => {
-                  setState(prev => ({ ...prev, date }));
+                onDateChange={(date) => {
+                  setState((prev) => ({...prev, date}));
                   advanceFrom('date');
                 }}
-                onSlotChange={slot => {
-                  setState(prev => ({ ...prev, slot }));
+                onSlotChange={(slot) => {
+                  setState((prev) => ({...prev, slot}));
                   advanceFrom('slot');
                 }}
-                onParkChange={park => {
-                  setState(prev => ({ ...prev, park }));
+                onParkChange={(park) => {
+                  setState((prev) => ({...prev, park}));
                   advanceFrom('park');
                 }}
-                onOpenQ={id => setOpenId(id as QuestionId)}
+                onOpenQ={(id) => setOpenId(id as QuestionId)}
               />
 
               <StepDetails
@@ -459,12 +544,22 @@ export default function BookingWidget({
                 email={state.email}
                 notes={state.notes}
                 ctype={state.ctype}
-                onNameChange={name => setState(prev => ({ ...prev, name }))}
-                onBusinessChange={business => setState(prev => ({ ...prev, business }))}
-                onPhoneChange={phone => setState(prev => ({ ...prev, phone }))}
-                onEmailChange={email => setState(prev => ({ ...prev, email }))}
-                onNotesChange={notes => setState(prev => ({ ...prev, notes }))}
-                onCtypeChange={ctype => setState(prev => ({ ...prev, ctype }))}
+                onNameChange={(name) => setState((prev) => ({...prev, name}))}
+                onBusinessChange={(business) =>
+                  setState((prev) => ({...prev, business}))
+                }
+                onPhoneChange={(phone) =>
+                  setState((prev) => ({...prev, phone}))
+                }
+                onEmailChange={(email) =>
+                  setState((prev) => ({...prev, email}))
+                }
+                onNotesChange={(notes) =>
+                  setState((prev) => ({...prev, notes}))
+                }
+                onCtypeChange={(ctype) =>
+                  setState((prev) => ({...prev, ctype}))
+                }
                 onAdvance={() => advanceFrom('details')}
                 onEdit={() => setOpenId('details')}
               />
@@ -477,8 +572,8 @@ export default function BookingWidget({
                 doneMap={doneMap}
                 badId={badId}
                 stepNumMap={stepNumMap}
-                onAcctChange={val => {
-                  setState(prev => ({ ...prev, acct: val }));
+                onAcctChange={(val) => {
+                  setState((prev) => ({...prev, acct: val}));
                   if (val === 'guest') {
                     advanceFrom('acct');
                   } else {
@@ -486,12 +581,14 @@ export default function BookingWidget({
                   }
                 }}
                 onChangeSignedIn={() => {
-                  setState(prev => ({ ...prev, signedIn: '' }));
+                  setState((prev) => ({...prev, signedIn: ''}));
                   onOpenSocialModal?.(state.acct === 'sub');
                 }}
-                onPayMethodChange={val => setState(prev => ({ ...prev, pay: val }))}
+                onPayMethodChange={(val) =>
+                  setState((prev) => ({...prev, pay: val}))
+                }
                 onSubmit={handleSubmit}
-                onOpenQ={id => setOpenId(id as QuestionId)}
+                onOpenQ={(id) => setOpenId(id as QuestionId)}
               />
             </div>
 
@@ -501,8 +598,20 @@ export default function BookingWidget({
         </div>
       </section>
 
+      {/* Mobile sticky price bar */}
+      <MobilePriceBar
+        priced={quote.priced}
+        total={quote.total}
+        onBreakdownClick={() => {
+          const railEl = document.querySelector('.rail');
+          if (railEl) {
+            railEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }}
+      />
+
       {/* Ornament divider matching index.html */}
-      <div className="ornament" style={{ paddingBlock: '6px' }}>
+      <div className="ornament" style={{paddingBlock: '6px'}}>
         <svg className="mark" viewBox="0 0 512 512" aria-hidden="true">
           <g className="stroke">
             <path d="M150 112 H350 A96 96 0 0 1 350 304 H150" />

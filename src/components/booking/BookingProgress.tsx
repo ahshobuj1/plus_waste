@@ -44,9 +44,9 @@ export default function BookingProgress({
           const isDone = completedSteps.includes(s.num);
 
           let containerClass =
-            'flex items-center justify-center sm:justify-start gap-2 py-2 px-2.5 rounded-lg border text-[12.5px] font-bold transition-all';
+            'flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 py-1.5 px-1.5 sm:py-2 sm:px-2.5 rounded-lg border text-[11.5px] sm:text-[12.5px] font-bold transition-all';
           let numClass =
-            'w-5 h-5 rounded-full flex items-center justify-center text-[10.5px] font-bold shrink-0';
+            'w-5 h-5 rounded-full flex items-center justify-center text-[10px] sm:text-[10.5px] font-bold shrink-0';
 
           if (isActive) {
             containerClass +=
@@ -89,10 +89,9 @@ export default function BookingProgress({
                 {isDone && !isActive ? '✓' : s.num}
               </span>
               <span
-                className="tx truncate font-bold"
+                className={`tx truncate font-bold text-[11.5px] sm:text-[12.5px] ${isActive ? 'inline-block' : 'hidden sm:inline-block'}`}
                 style={{
-                  color: isActive ? '#ffffff' : isDone ? '#141416' : '#4a4744',
-                  display: 'inline-block'
+                  color: isActive ? '#ffffff' : isDone ? '#141416' : '#4a4744'
                 }}
               >
                 {s.label}

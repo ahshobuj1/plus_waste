@@ -1,3 +1,14 @@
+import type {Metadata} from 'next';
+
+export const metadata: Metadata = {
+  title: 'Delivery Terms & Information',
+  description:
+    'Delivery options, timings, and policies for Plus Waste shop products, PPE, and waste clearance supplies in Greater London.',
+  alternates: {
+    canonical: 'https://pluswaste.co.uk/delivery-terms',
+  },
+};
+
 export default function DeliveryTerms() {
   return (
     <div className="wrap" style={{ padding: '100px 0', minHeight: '60vh' }}>

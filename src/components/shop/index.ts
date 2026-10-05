@@ -5,3 +5,4 @@ export { default as ShopHero } from './ShopHero';
 export { default as CheckoutModal } from './CheckoutModal';
 export { default as ToastNotification } from './ToastNotification';
 export { default as MobileBasketBar } from './MobileBasketBar';
+export { default as ShopContent } from './ShopContent';
