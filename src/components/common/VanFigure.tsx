@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { CAGE_YD, VAN_BOX } from '@/data/pricingData';
 
 interface VanFigureProps {
@@ -25,10 +26,13 @@ export default function VanFigure({
 
   return (
     <div className={`vanfig ${className}`}>
-      <img
+      <Image
         src="/assets/image_20.png"
         alt={alt || defaultAlt}
+        width={300}
+        height={180}
         loading="lazy"
+        unoptimized
       />
       <div
         className="cage"

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, {useState, useRef} from 'react';
 import QuestionCard from './QuestionCard';
 
 interface StepAddressProps {
@@ -22,24 +22,17 @@ export default function StepAddress({
   isDone,
   isBad = false,
   address,
-  postcode,
   onAddressChange,
   onPostcodeChange,
   onAdvance,
-  onEdit
+  onEdit,
 }: StepAddressProps) {
-  const [query, setQuery] = useState(address);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    setQuery(address);
-  }, [address]);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    setQuery(val);
     onAddressChange(val);
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -52,7 +45,7 @@ export default function StepAddress({
     debounceRef.current = setTimeout(async () => {
       try {
         const res = await fetch(
-          `https://api.postcodes.io/postcodes/${encodeURIComponent(val.trim())}/autocomplete`
+          `https://api.postcodes.io/postcodes/${encodeURIComponent(val.trim())}/autocomplete`,
         );
         if (res.ok) {
           const data = await res.json();
@@ -65,13 +58,12 @@ export default function StepAddress({
   };
 
   const handleSelectSuggestion = (p: string) => {
-    const current = query.trim();
+    const current = address.trim();
     const house = current
       .replace(/[A-Z]{1,2}\d[A-Z\d]?\s?\d?[A-Z]{0,2}$/i, '')
       .trim()
       .replace(/,$/, '');
     const finalAddr = (house ? house + ', ' : '') + p;
-    setQuery(finalAddr);
     onAddressChange(finalAddr);
     onPostcodeChange(p);
     setShowDropdown(false);
@@ -87,27 +79,28 @@ export default function StepAddress({
       isDone={isDone}
       isBad={isBad}
       hint="Start typing and pick your postcode from the list, then add the building number or name."
-      onEdit={onEdit}
-    >
-      <div className={`fld ${isBad ? 'bad' : ''}`} id="fAddr" style={{ position: 'relative' }}>
+      onEdit={onEdit}>
+      <div
+        className={`fld ${isBad ? 'bad' : ''}`}
+        id="fAddr"
+        style={{position: 'relative'}}>
         <input
           type="text"
           id="addr"
           placeholder="e.g. 42 Great Titchfield Street, W1W 7PR"
           autoComplete="street-address"
-          value={query}
+          value={address}
           onChange={handleInputChange}
           onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
         />
         {showDropdown && suggestions.length > 0 && (
           <div className="ac-list on" id="acList">
-            {suggestions.map(s => (
+            {suggestions.map((s) => (
               <button
                 key={s}
                 type="button"
                 data-ac={s}
-                onMouseDown={() => handleSelectSuggestion(s)}
-              >
+                onMouseDown={() => handleSelectSuggestion(s)}>
                 {s}
               </button>
             ))}
@@ -118,9 +111,8 @@ export default function StepAddress({
         <button
           className="btn btn-go"
           type="button"
-          disabled={query.trim().length <= 3}
-          onClick={onAdvance}
-        >
+          disabled={address.trim().length <= 3}
+          onClick={onAdvance}>
           Continue
         </button>
       </div>

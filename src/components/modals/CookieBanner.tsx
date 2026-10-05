@@ -8,15 +8,18 @@ export default function CookieBanner() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
     try {
       const consent = localStorage.getItem('pw_cookies');
       if (!consent) {
-        const timer = setTimeout(() => setShow(true), 900);
-        return () => clearTimeout(timer);
+        timer = setTimeout(() => setShow(true), 900);
       }
     } catch {
-      setShow(true);
+      timer = setTimeout(() => setShow(true), 900);
     }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   const handleChoice = (val: 'all' | 'essential') => {

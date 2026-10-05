@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import QuestionCard from './QuestionCard';
 import { UploadedFile } from '@/types';
 
@@ -132,7 +133,14 @@ export default function StepPhotos({
                   Video<br />{f.name.slice(0, 12)}
                 </div>
               ) : (
-                <img src={f.url} alt={f.name} />
+                <Image
+                  src={f.url}
+                  alt={f.name}
+                  width={100}
+                  height={100}
+                  style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                  unoptimized
+                />
               )}
               <button
                 type="button"

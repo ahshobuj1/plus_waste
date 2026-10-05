@@ -1,13 +1,11 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef, useSyncExternalStore } from 'react';
 import {
-  BookingState,
-  LoadTier,
-  TimeSlotOption,
-  UploadedFile
+  BookingState
 } from '@/types';
 import { calculateQuote } from '@/utils/pricing';
+import { subscribeToBasket, getBasketSnapshot, getServerBasketSnapshot } from '@/utils/shop';
 import BookingProgress from './booking/BookingProgress';
 import BookingRail from './booking/BookingRail';
 import StepAddress from './booking/StepAddress';
@@ -52,14 +50,18 @@ export default function BookingWidget({
   onOpenShopModal,
   onShowToast
 }: BookingWidgetProps) {
-  const [shopBasket, setShopBasket] = useState<Record<string, number>>({});
-
-  useEffect(() => {
+  const basketJson = useSyncExternalStore(
+    subscribeToBasket,
+    getBasketSnapshot,
+    getServerBasketSnapshot
+  );
+  const shopBasket = useMemo<Record<string, number>>(() => {
     try {
-      const stored = localStorage.getItem('pw_basket');
-      if (stored) setShopBasket(JSON.parse(stored));
-    } catch {}
-  }, []);
+      return JSON.parse(basketJson);
+    } catch {
+      return {};
+    }
+  }, [basketJson]);
 
   const [state, setState] = useState<BookingState>({
     postcode: initialPostcode,
@@ -91,19 +93,18 @@ export default function BookingWidget({
     pay: ''
   });
 
+  const [prevPostcode, setPrevPostcode] = useState(initialPostcode);
+  if (initialPostcode && initialPostcode !== prevPostcode) {
+    setPrevPostcode(initialPostcode);
+    setState(prev => ({
+      ...prev,
+      postcode: initialPostcode,
+      address: prev.address || initialPostcode
+    }));
+  }
+
   const [openId, setOpenId] = useState<QuestionId>('address');
   const [badId, setBadId] = useState<string | null>(null);
-
-  // Sync initial postcode if changed externally
-  useEffect(() => {
-    if (initialPostcode) {
-      setState(prev => ({
-        ...prev,
-        postcode: initialPostcode,
-        address: prev.address || initialPostcode
-      }));
-    }
-  }, [initialPostcode]);
 
   // Dynamic visible questions
   const liveQuestions = useMemo(() => {
@@ -187,12 +188,12 @@ export default function BookingWidget({
   }, [liveQuestions, doneMap]);
 
   // Trigger modals on reaching certain questions
-  const [hasShownShopPrompt, setHasShownShopPrompt] = useState(false);
-  const [hasShownWaPrompt, setHasShownWaPrompt] = useState(false);
+  const hasShownShopPrompt = useRef(false);
+  const hasShownWaPrompt = useRef(false);
 
   useEffect(() => {
-    if (openId === 'acct' && !hasShownShopPrompt) {
-      setHasShownShopPrompt(true);
+    if (openId === 'acct' && !hasShownShopPrompt.current) {
+      hasShownShopPrompt.current = true;
       try {
         const seen = sessionStorage.getItem('pw_shop');
         if (!seen) {
@@ -201,8 +202,8 @@ export default function BookingWidget({
         }
       } catch {}
     }
-    if (openId === 'pay' && !hasShownWaPrompt) {
-      setHasShownWaPrompt(true);
+    if (openId === 'pay' && !hasShownWaPrompt.current) {
+      hasShownWaPrompt.current = true;
       try {
         const seen = sessionStorage.getItem('pw_wa');
         if (!seen) {
@@ -211,7 +212,7 @@ export default function BookingWidget({
         }
       } catch {}
     }
-  }, [openId, hasShownShopPrompt, hasShownWaPrompt, onOpenShopModal, onOpenWhatsAppModal]);
+  }, [openId, onOpenShopModal, onOpenWhatsAppModal]);
 
   // Submission handler
   const handleSubmit = (saveOnly: boolean) => {
@@ -276,15 +277,8 @@ export default function BookingWidget({
     if (quote.shop > 0) {
       try {
         localStorage.removeItem('pw_basket');
+        window.dispatchEvent(new Event('pw_basket_updated'));
       } catch {}
-      setShopBasket({});
-    }
-  };
-
-  const scrollToRail = () => {
-    const rail = document.querySelector('.rail');
-    if (rail) {
-      rail.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 

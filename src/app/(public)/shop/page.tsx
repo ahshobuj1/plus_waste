@@ -1,70 +1,176 @@
 'use client';
 
+import React, { useState, useEffect, useMemo, useCallback, useSyncExternalStore } from 'react';
 import { PRODUCTS } from '@/data/shopData';
-import Image from 'next/image';
+import { ShopBasket, CheckoutFormData } from '@/types';
+import {
+  calculateShopTotals,
+  subscribeToBasket,
+  getBasketSnapshot,
+  getServerBasketSnapshot,
+  getSavedBasket,
+  saveBasket
+} from '@/utils/shop';
+import {
+  ShopHero,
+  ProductCategorySection,
+  ShopBasketSidebar,
+  CheckoutModal,
+  ToastNotification,
+  MobileBasketBar
+} from '@/components/shop';
 
 export default function ShopPage() {
+  // Subscribe to external basket store via useSyncExternalStore to eliminate cascading renders
+  const basketJson = useSyncExternalStore(
+    subscribeToBasket,
+    getBasketSnapshot,
+    getServerBasketSnapshot
+  );
+
+  const basket = useMemo<ShopBasket>(() => {
+    try {
+      const parsed = JSON.parse(basketJson);
+      if (parsed && typeof parsed === 'object') return parsed;
+    } catch {}
+    return {};
+  }, [basketJson]);
+
+  const [quantities, setQuantities] = useState<Record<string, number>>(() => {
+    const initial: Record<string, number> = {};
+    PRODUCTS.forEach(p => {
+      initial[p.id] = 1;
+    });
+    return initial;
+  });
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [toast, setToast] = useState<{ message: string; subMessage?: string } | null>(null);
+
+  // Auto-dismiss toast notification
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => {
+      setToast(null);
+    }, 3200);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
+  // Derived category list
+  const categories = useMemo(() => {
+    return Array.from(new Set(PRODUCTS.map(p => p.cat)));
+  }, []);
+
+  // Derived shop totals
+  const totals = useMemo(() => {
+    return calculateShopTotals(basket, PRODUCTS);
+  }, [basket]);
+
+  // Handle per-card quantity stepper changes (minimum 1)
+  const handleQuantityChange = useCallback((productId: string, qty: number) => {
+    setQuantities(prev => ({
+      ...prev,
+      [productId]: Math.max(1, qty)
+    }));
+  }, []);
+
+  // Add to basket action
+  const handleAddToCart = useCallback((productId: string) => {
+    const product = PRODUCTS.find(p => p.id === productId);
+    if (!product) return;
+
+    const countToAdd = Math.max(1, quantities[productId] || 1);
+    const currentBasket = getSavedBasket();
+    const nextBasket: ShopBasket = {
+      ...currentBasket,
+      [productId]: (currentBasket[productId] || 0) + countToAdd
+    };
+
+    saveBasket(nextBasket);
+
+    // Reset the card quantity back to default 1
+    setQuantities(prev => ({
+      ...prev,
+      [productId]: 1
+    }));
+
+    // Trigger toast feedback
+    setToast({
+      message: 'Added to basket',
+      subMessage: `${countToAdd} × ${product.n}`
+    });
+  }, [quantities]);
+
+  // Update item quantity directly in the basket
+  const handleUpdateBasketQuantity = useCallback((productId: string, newQty: number) => {
+    const currentBasket = getSavedBasket();
+    const nextBasket: ShopBasket = { ...currentBasket };
+    if (newQty <= 0) {
+      delete nextBasket[productId];
+    } else {
+      nextBasket[productId] = newQty;
+    }
+    saveBasket(nextBasket);
+  }, []);
+
+  // Remove item completely from the basket
+  const handleRemoveFromBasket = useCallback((productId: string) => {
+    const currentBasket = getSavedBasket();
+    const nextBasket: ShopBasket = { ...currentBasket };
+    delete nextBasket[productId];
+    saveBasket(nextBasket);
+  }, []);
+
+  // Handle checkout modal submission
+  const handleOrderPlaced = useCallback((formData: CheckoutFormData) => {
+    saveBasket({});
+    setToast({
+      message: 'Order confirmed!',
+      subMessage: `Thank you, ${formData.name}.`
+    });
+  }, []);
+
   return (
     <main>
-      <section className="hero">
-        <div className="wrap">
-          <h1>Bags, gloves and PPE at trade prices</h1>
-          <p>The same kit our crews use, delivered to your door or site. Order before 3:30pm Monday to Friday for next working day delivery on stocked lines.</p>
-          <div className="usp">
-            <span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-              Next working day
-            </span>
-            <span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-              Free delivery over £75
-            </span>
-            <span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-              Add to a booked collection
-            </span>
-          </div>
-        </div>
-      </section>
+      <ShopHero />
 
       <div className="shopgrid wrap">
         <div id="products">
-          <h3 className="cat">Products</h3>
-          <div className="prods">
-            {PRODUCTS.map(p => (
-              <div className="prod" key={p.id}>
-                <div className="pimg">
-                  {/* Using standard img tags since we have absolute/relative paths and no width/height predefined */}
-                  <img src={`/assets/${p.img}.jpg`} alt={p.n} onError={(e) => { e.currentTarget.src = '/assets/image_100.jpg'; }} />
-                </div>
-                <div className="pb">
-                  <div className="pn">{p.n}</div>
-                  <div className="pu">{p.u}</div>
-                  <div className="pp">£{p.cost.toFixed(2)}</div>
-                  <div className="padd">
-                    <button type="button">Add to Basket</button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          {categories.map(category => (
+            <ProductCategorySection
+              key={category}
+              category={category}
+              products={PRODUCTS.filter(p => p.cat === category)}
+              quantities={quantities}
+              onQuantityChange={handleQuantityChange}
+              onAddToCart={handleAddToCart}
+            />
+          ))}
         </div>
 
-        <aside className="cart" aria-label="Basket">
-          <div className="cart-hd">
-            <svg className="mark" viewBox="0 0 512 512" aria-hidden="true"><g className="stroke"><path d="M150 112 H350 A96 96 0 0 1 350 304 H150"/><path d="M174 280 V423"/><path d="M39 208 H350"/></g><circle cx="350" cy="208" r="24" fill="currentColor"/><rect x="66" y="157" width="47" height="101" fill="currentColor"/></svg>
-            <h2>Your basket</h2>
-          </div>
-          <div className="cart-body" id="cartBody">
-            <div className="cart-empty">Your basket is empty</div>
-          </div>
-          <div className="cart-tot" id="cartTot"></div>
-          <div className="cart-ft">
-            <button className="btn btn-go" id="checkoutBtn" type="button" disabled>Checkout</button>
-            <button className="btn btn-lt" type="button">Book a collection instead</button>
-          </div>
-        </aside>
+        <ShopBasketSidebar
+          totals={totals}
+          onUpdateQuantity={handleUpdateBasketQuantity}
+          onRemoveItem={handleRemoveFromBasket}
+          onCheckout={() => setIsCheckoutOpen(true)}
+        />
       </div>
+
+      <CheckoutModal
+        isOpen={isCheckoutOpen}
+        totals={totals}
+        onClose={() => setIsCheckoutOpen(false)}
+        onOrderPlaced={handleOrderPlaced}
+      />
+
+      <MobileBasketBar
+        totals={totals}
+        onOpenBasket={() => setIsCheckoutOpen(true)}
+      />
+
+      <ToastNotification
+        message={toast?.message ?? null}
+        subMessage={toast?.subMessage}
+      />
     </main>
   );
 }

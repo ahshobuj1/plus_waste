@@ -1,7 +1,6 @@
-'use client';
-
-import { BLOG_POSTS } from '@/data/blogData';
+import Link from 'next/link';
 import Image from 'next/image';
+import { BLOG_POSTS } from '@/data/blogData';
 
 export default function BlogPage() {
   return (
@@ -15,7 +14,14 @@ export default function BlogPage() {
       <div className="posts wrap">
         {BLOG_POSTS.map(post => (
           <article className="post in" id={post.id} key={post.id}>
-            <img src={post.img} alt={post.title} onError={(e) => { e.currentTarget.src = '/assets/image_100.jpg'; }} />
+            <Image
+              src={post.img}
+              alt={post.title}
+              width={600}
+              height={380}
+              style={{ width: '100%', height: 'auto', objectFit: 'cover' }}
+              unoptimized
+            />
             <div className="post-body">
               <time>{post.date}</time>
               <h2>{post.title}</h2>
@@ -38,7 +44,7 @@ export default function BlogPage() {
           <h2>Need a fast clearance?</h2>
           <p>Book online in 3 minutes, same-day available.</p>
         </div>
-        <a className="btn-go" href="/#flow">Check prices &amp; book</a>
+        <Link className="btn-go" href="/#flow">Check prices &amp; book</Link>
       </div>
     </main>
   );

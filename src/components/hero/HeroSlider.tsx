@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { JOB_PHOTOS } from '@/data/photosData';
 
 export default function HeroSlider() {
@@ -17,12 +18,16 @@ export default function HeroSlider() {
     <>
       <div className="pc-slides" id="pcSlides" aria-hidden="true">
         {JOB_PHOTOS.map((photo, idx) => (
-          <img
+          <Image
             key={photo.file}
             src={photo.src}
             alt=""
-            loading={idx === 0 ? undefined : 'lazy'}
+            width={600}
+            height={400}
+            priority={idx === 0}
             className={idx === activeIndex ? 'live' : ''}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            unoptimized
           />
         ))}
       </div>

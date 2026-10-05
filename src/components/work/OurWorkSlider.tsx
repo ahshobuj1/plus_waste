@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import Image from 'next/image';
 import { JOB_PHOTOS } from '@/data/photosData';
 
 export default function OurWorkSlider() {
@@ -13,25 +14,25 @@ export default function OurWorkSlider() {
     return Array.from(new Set(JOB_PHOTOS.map(p => p.area)));
   }, []);
 
-  const goToSlide = (target: number, dir: 'fwd' | 'back' = 'fwd') => {
+  const goToSlide = useCallback((target: number, dir: 'fwd' | 'back' = 'fwd') => {
     setDirection(dir);
     setPrevIndex(currentIndex);
     setCurrentIndex((target + JOB_PHOTOS.length) % JOB_PHOTOS.length);
-  };
+  }, [currentIndex]);
 
-  const restartTimer = () => {
+  const restartTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       goToSlide(currentIndex + 1, 'fwd');
     }, 4200);
-  };
+  }, [currentIndex, goToSlide]);
 
   useEffect(() => {
     restartTimer();
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [currentIndex]);
+  }, [restartTimer]);
 
   const currentPhoto = JOB_PHOTOS[currentIndex];
 
@@ -47,12 +48,16 @@ export default function OurWorkSlider() {
             className = direction === 'back' ? 'live' : 'out';
           }
           return (
-            <img
+            <Image
               key={photo.file}
               src={photo.src}
               alt={photo.cap}
-              loading={idx === 0 ? undefined : 'lazy'}
+              width={700}
+              height={460}
+              priority={idx === 0}
               className={className}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              unoptimized
             />
           );
         })}

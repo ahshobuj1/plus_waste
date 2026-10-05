@@ -3423,6 +3423,7 @@ p {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  height: 100%;
   transition: 0.2s;
 }
 .prod:hover {
@@ -3457,18 +3458,26 @@ p {
   font-weight: 600;
   font-size: 13.5px;
   line-height: 1.35;
+  margin: 0;
+  min-height: 38px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .pu {
   font-size: 11.5px;
   color: var(--steel);
   margin-top: 3px;
+  min-height: 17px;
 }
 .pp {
   font-family: var(--display);
   font-weight: 800;
   font-size: 21px;
   color: var(--red);
-  margin: 8px 0 0;
+  margin-top: auto;
+  padding-top: 10px;
   font-variant-numeric: tabular-nums;
 }
 .pp small {
@@ -3513,10 +3522,17 @@ p {
   font-size: 15px;
   line-height: 1;
   color: var(--ink);
+  transition: 0.15s;
 }
-.qty button:hover {
+.qty button:hover:not(:disabled) {
   border-color: var(--red);
   color: var(--red);
+}
+.qty button:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  border-color: var(--rule);
+  color: var(--steel);
 }
 .qty output {
   min-width: 24px;
@@ -3524,6 +3540,16 @@ p {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   font-size: 13.5px;
+}
+.cart-badge {
+  margin-left: auto;
+  background: var(--red-lift);
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 11.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .cart {
