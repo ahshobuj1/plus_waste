@@ -11,12 +11,12 @@ export default function AdminHeader() {
 
   return (
     <header className="sticky top-0 z-30 w-full border-b border-[#e7e3dd] bg-white/90 backdrop-blur-md">
-      {isPreviewMode && (
+      {/* {isPreviewMode && (
         <div className="bg-[#fdf4e4] border-b border-[#f0dcb8] px-4 py-1.5 text-center text-[12.5px] text-[#6b4100] font-medium">
           Preview mode — sample operations data. Connect backend API for live
           booking feed.
         </div>
-      )}
+      )} */}
       <div className="flex items-center justify-between px-4 sm:px-6 py-2.5">
         <div className="flex items-center gap-3">
           <Link

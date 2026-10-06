@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { AdminProvider, useAdmin } from '@/context/AdminContext';
+import {AdminProvider, useAdmin} from '@/context/AdminContext';
 import AdminHeader from '@/components/admin/AdminHeader';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminGate from '@/components/admin/auth/AdminGate';
@@ -15,7 +15,7 @@ import SetupView from '@/components/admin/setup/SetupView';
 import AdminToast from '@/components/admin/common/AdminToast';
 
 function AdminDashboardContent() {
-  const { isAuthenticated, currentTab } = useAdmin();
+  const {isAuthenticated, currentTab} = useAdmin();
 
   if (!isAuthenticated) {
     return <AdminGate />;
@@ -35,13 +35,9 @@ function AdminDashboardContent() {
               <TodayCollections />
             </div>
           )}
-
           {currentTab === 'jobs' && <JobsView />}
-
           {currentTab === 'money' && <MoneyView />}
-
           {currentTab === 'shop' && <ShopView />}
-
           {currentTab === 'setup' && <SetupView />}
         </main>
       </div>
